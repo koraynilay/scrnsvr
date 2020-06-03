@@ -15,7 +15,7 @@ md5sums=("SKIP")
 
 build() {
 	cd "$srcdir/$pkgname-$pkgver"
-	gcc scrnsvr.c -o scrnsvr -lXss -lX11 -lpthread
+	gcc -g -O0 -Wl,-z,relro,-z,now scrnsvr.c -o scrnsvr -lXss -lX11 -lpthread
 }
 
 package() {
