@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
 				case 'x': //exits right before loop
 					exits = 1;
 					break;
-				case 'p': //prints options
+				case 'v': //prints options
 					print_opts = 1;
 					break;
 				case 'w': //activate get list programs inhibit
@@ -210,12 +210,12 @@ int main(int argc, char *argv[])
 	}
 
 	if(print_opts == 1){
-		printf("timeout (-t): %d s\n",timeout/1000);
-		printf("timeout (-a): %d s\n",time_saver);
-		printf("timeout (-s): %d s\n",time_sleep);
-		printf("screensaver (-r): %s\n",saver);
-		printf("locker (-l): %s\n",locker);
-		printf("blanker (-b): %s\n",sleeper);
+		printf("Before [Screensaver] from now (-t): %d s\n",timeout/1000);
+		printf("Before [Locker] from [Screensaver] (-a): %d s\n",time_saver);
+		printf("Before [Blanker] from now (-s): %d s\n",time_sleep);
+		printf("Screensaver (-r): %s\n",saver);
+		printf("Locker (-l): %s\n",locker);
+		printf("Blanker (-b): %s\n",sleeper);
 	}
 	
 	if(debug_high == 1 || (print_opts == 1 && notifier[0] != '\0'))printf("notifier: %s\n",notifier);
