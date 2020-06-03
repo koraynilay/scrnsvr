@@ -2,15 +2,13 @@
 pkgname=scrnsvr
 pkgver=1.0
 pkgrel=1
-epoch=
 pkgdesc="X Screensaver/locker"
 arch=('x86_64')
 url="https://github.com/koraynilay/scrnsvr"
 license=('custom')
 depends=('pulseaudio' 'wmctrl' 'grep' 'procps-ng')
-makedepends=()
 source=("$pkgname-$pkgver::git+https://github.com/koraynilay/scrnsvr")
-optdepends=('dunst' 'notify-send')
+optdepends=('dunst: dunstify for notifications' 'notify-send: for notifications')
 md5sums=("SKIP")
 
 build() {
@@ -20,7 +18,5 @@ build() {
 
 package() {
 	cd "$pkgname-$pkgver"
-	echo $pkgdir
 	install -Dm0755 scrnsvr "$pkgdir/usr/bin/$pkgname"
-	echo "'dunst' and 'notify-send' packages are used for the notification before saving (can be disabled with the -n switch)"
 }
