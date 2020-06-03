@@ -58,6 +58,10 @@ struct slf_struct
 
 int main(int argc, char *argv[])
 {
+	if(getuid() == 0){
+		pr("\nYou should NOT run this as root. Press Control-C to cancel (10 seconds timeout)\n\n");
+		sleep(10);
+	}
 	if(argc < 7){
 		printUsage();
 		return 1;
@@ -176,7 +180,7 @@ int main(int argc, char *argv[])
 					}
 					break;
 				default:
-					pr("Uknown option: %s. Type only '%s' to get a list of options\n",argv[i],argv[0]);
+					pr("Uknown option: %s. Use only '%s', or the switch '--help', to get a list of options\n",argv[i],argv[0]);
 					exit(4);
 			}
 		}

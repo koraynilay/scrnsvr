@@ -1,24 +1,19 @@
 # Maintainer: koraynilay <koray.fra@gmail.com>
-pkgname=scrnsvr
+pkgname=scrnsvr-bin
 pkgver=1.0
 pkgrel=1
-pkgdesc="X Screensaver/locker"
+pkgdesc="X Screensaver/locker. Pre-compiled version."
 arch=('x86_64')
 url="https://github.com/koraynilay/scrnsvr"
 license=('custom')
+conflicts=('scrnsvr')
 depends=('pulseaudio' 'wmctrl' 'grep' 'procps-ng' 'gcc' 'libxss' 'libx11' 'glibc' 'libxext' 'libxau' 'libxdmcp')
 makedepends=('git')
-conflicts=('scrnsvr-bin')
 source=("$pkgname-$pkgver::git+https://github.com/koraynilay/scrnsvr")
 optdepends=('dunst: dunstify for notifications' 'notify-send: for notifications')
 md5sums=("SKIP")
 
-build() {
-	cd "$srcdir/$pkgname-$pkgver"
-	gcc scrnsvr.c -o scrnsvr -lXss -lX11 -lpthread
-}
-
 package() {
-	cd "$pkgname-$pkgver"
-	install -Dm0755 scrnsvr "$pkgdir/usr/bin/$pkgname"
+	cd "$srcdir/$pkgname-$pkgver"
+	install -Dm0755 scrnsvr "$pkgdir/usr/bin/${pkgname::-4}"
 }
