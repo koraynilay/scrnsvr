@@ -1,0 +1,10 @@
+0	normal exit (or after --help)
+1	too few arguments
+2	invalid timeout (-t)
+3	invalid time after timeout (-a)
+4	invalid blanker time (-s)
+5	one of -w arguments is too long (max 52 chars)
+6	unknown option
+10	saver parameter is invalid
+11	locker parameter is invalid
+12	sleeper parameter is invalid

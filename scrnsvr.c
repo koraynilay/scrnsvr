@@ -6,7 +6,7 @@
  *
  * gcc -g -O0 -Wl,-z,relro,-z,now [options] scrnsvr.c -o scrnsvr -lXss -lX11 -lpthread
 */
-
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -14,11 +14,13 @@
 #include <string.h>
 #include <pthread.h>
 #include <X11/extensions/scrnsaver.h>
+#include <X11/Xutil.h>
 
 #define pr(...) (fprintf(stderr,__VA_ARGS__)) //print errors to stderr
 #define ckea(x) (x[0] == '\0' || (x[0] == '-' && (x[1] == 'r' || x[1] == 'l' || x[1] == 'b'))) //check if required options exist
 #define len(x) (sizeof(x)/sizeof(x[0])) //array length
 #define print_array(z,x) for(int y=0;y<z;y++)printf("%d element: %s\n",y,x[y]); //print every array element
+#define pd() (printf("\nciao\n"))
 
 void child(void *ptr);
 void slf(void *ptr);
@@ -85,7 +87,6 @@ int main(int argc, char *argv[])
 	char notifier_3[50] = "";
 	char notifier_4[50] = "";
 	char notifier_5[50] = "";
-	char cmd_wmctrl[500] = "wmctrl -l | grep -i -E '";
 	int timeout = 120*1000;
 	int time_saver = 30;
 	int time_sleep = 180;
@@ -95,6 +96,8 @@ int main(int argc, char *argv[])
 	int debug_high = 0;
 	int debug_ultra_high = 0;
 	int debug_ultra_mega_high = 0;
+	int is_fullscreen = 0;
+	int check_fullscreen = 1;
 	int can_lock_pa = 1;
 	int can_lock_wm = 1;
 	int exits = 0;
@@ -103,9 +106,6 @@ int main(int argc, char *argv[])
 	int get_args = 0;
 	int j = len_servs;
 	j = 5; //number of precompiled services
-	//if(debug_ultra_high == 1)printf("%s\n",cmd_parun);
-	if(debug_ultra_mega_high == 1)printf("%p\n",cmd_wmctrl);
-	//if(debug_ultra_mega_high == 1)printf("%p\n",cmd_parun);
 
 	for(int i = 0; i < argc; i++){
 		if(argv[i][0] == '-'){
@@ -161,6 +161,9 @@ int main(int argc, char *argv[])
 					break;
 				case 'v': //prints options
 					print_opts = 1;
+					break;
+				case 'f': //disable fullscreen check
+					check_fullscreen = 0;
 					break;
 				case 'w': //activate get list programs inhibit
 					get_args = 1;
@@ -225,26 +228,6 @@ int main(int argc, char *argv[])
 	if(debug_high == 1 || (print_opts == 1 && notifier_4[0] != '\0'))printf("notifier_4: %s\n",notifier_4);
 	if(debug_high == 1 || (print_opts == 1 && notifier_5[0] != '\0'))printf("notifier_5: %s\n",notifier_5);
 
-	char pipe[] = "|";
-	char devnull[] = "' >/dev/null";
-	int i;
-	for(i=0;i<len_servs;i++){ //compiles wmctrl command grep regex
-		if(debug_ultra_high == 1)printf("%s\n",servs[i]);
-		if(debug_ultra_mega_high == 1)printf("%d\n",i);
-		strcpy(pipe,"|");
-		strcpy(devnull,"' >/dev/null");
-		if(servs[i][0]){
-			if(i==0){
-				strcat(cmd_wmctrl,servs[i]);
-			}else{
-				strcat(cmd_wmctrl,strcat(pipe,servs[i]));
-			}
-		}
-		if(debug_ultra_high == 1)printf("[%d]%s\n",i,cmd_wmctrl);
-	}
-	strcat(cmd_wmctrl,devnull);
-	if(debug == 1)printf("%s\n",cmd_wmctrl);
-	
 	time_sleep -= (timeout/1000); //makes sure the specified blank time is the time before blanker executes (instead of putting that time after the locker)
 	//compiles commands
 	sprintf(cmd_saver, "%s", saver);
@@ -308,6 +291,7 @@ int main(int argc, char *argv[])
 	
 	char cmd_parun[] = "pactl list short | grep RUNNING >/dev/null"; //if I put it at the start, it could get overwritten by servs[] (idk why, but ok)
 	if(debug_high == 1)printf("%s\n",cmd_parun);
+
 	if(exits == 1)exit(0); //if -x is specified exit
 	//loop
 	while(my_display){
@@ -315,11 +299,69 @@ int main(int argc, char *argv[])
 		Display *my_display = XOpenDisplay(NULL); //get display
 		XScreenSaverInfo *info = XScreenSaverAllocInfo(); //assing display info
 		XScreenSaverQueryInfo(my_display, DefaultRootWindow(my_display), info); //get display info
+
+		int display_height = XDisplayWidth(my_display,XDefaultScreen(my_display));
+		int display_width = XDisplayHeight(my_display,XDefaultScreen(my_display));
+		if(debug_high == 1)printf("Display geom: %dx%d\n",display_height,display_width);
+
+		//get current focused window
+		Window focused;
+		int revto;
+		XWindowAttributes attribs;
+		XGetInputFocus(my_display, &focused, &revto);
+		XGetWindowAttributes(my_display, focused, &attribs);
+		if(debug_high == 1)printf("Focused window geom: %dx%d\n",attribs.width,attribs.height);
+		
+		//check if focused window is fullscreen
+		if(check_fullscreen == 1){
+			Atom prop_state = XInternAtom(my_display, "_NET_WM_STATE",False);
+			Atom prop_fullscreen = XInternAtom(my_display, "_NET_WM_STATE_FULLSCREEN",True);
+			Atom actype;
+			Atom cprop;
+			int fmt;
+			unsigned long nitems,bytesafter;
+			unsigned char *states;
+
+			int status = XGetWindowProperty(my_display, focused, prop_state, 0L, sizeof(Atom), False, AnyPropertyType, &actype, &fmt, &nitems, &bytesafter, &states);
+			if(status == Success && states){
+				for(int i=0;i<nitems;i++){
+					cprop = ((Atom *)states)[i];
+					if(cprop == prop_fullscreen)is_fullscreen = True;
+					else is_fullscreen = False;
+				}
+			}
+		}
+
+		//check if name is one of servs
+		XTextProperty fname;
+		Status fst = XGetWMName(my_display, focused, &fname);
+		if(fst && debug_high == 1)printf("%s\n",fname.value);
+
+		if(fst){
+			for(int i=0;i<len_servs;i++){
+				if(debug_ultra_high == 1)printf("%s\n",servs[i]);
+				if(debug_ultra_mega_high == 1)printf("%d\n",i);
+				if(debug_ultra_mega_high == 1)printf("%s\n",fname.value);
+				char *pl=strcasestr((const char *)fname.value,servs[i]);
+				if(servs[i][0] && pl != NULL){
+					can_lock_wm = 0;
+					break;
+				}else can_lock_wm = 1;
+			}
+		}
+
+
 		can_lock_pa=system(cmd_parun)/256; //audio playing?
-		can_lock_wm=system(cmd_wmctrl)/256; //focused tab title contains one of servs[]?
 		if(debug == 1)printf("can_lock_pa = %d\n",can_lock_pa);
+		if(debug == 1)printf("is_fullscreen = %d\n",is_fullscreen);
 		if(debug == 1)printf("can_lock_wm = %d\n",can_lock_wm);
-		if(can_lock_pa == 1 || can_lock_wm == 1){
+		//if
+		//   audio not playing then lock
+		//   focused tab hasn't servs then lock
+		//   app is not fullscreen then lock
+
+		//if((can_lock_pa == 1 || can_lock_wm == 1) && !is_fullscreen){ //wasn't sure about the logic lol
+		if(!((can_lock_pa != 1 && can_lock_wm != 1) || is_fullscreen)){
 			if(info->idle >= timeout && info->idle <= timeout+180){ //has timeout passed?
 				sys=system(pgrep_lock)/256; //is the locker running?
 				if(debug_high == 1)printf("sys = %d\n",sys);
