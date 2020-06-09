@@ -45,9 +45,9 @@ void printUsage(){
 		pr("-c4 [notifier]\tCommand used to send notifications when there is 4 second left(if -n is NOT specified)\n");
 		pr("-c5 [notifier]\tCommand used to send notifications when there is 5 second left(if -n is NOT specified)\n");
 		pr("-x\t\tExecutes until the loop (without entering it) and exits\n");
+		pr("-f\t\tDisables the detection of the fullscreen state of the current focused window\n");
 		pr("-v\t\tPrints selected options (even if defaulted)\n");
 		pr("-d\t\tShows debug info (Use -D,-u,-U for more levels of debugging)\n");
-		exit(1);
 }
 
 struct child_struct //struct for thread locker arguments
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 	}
 	if(argc < 7){ //are there the required switches?
 		printUsage();
-		return 1;
+		exit(1);
 	}
 	char saver[50] = "";
 	char locker[50] = "";
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 	int can_lock_pa = 1;
 	int can_lock_wm = 1;
 	int exits = 0;
-	char servs[100][50] = {"youtube", "vlc", "mpv", "vimeo", "picture in picture"};
+	char servs[100][53] = {"youtube", "vlc", "mpv", "vimeo", "picture in picture"};
 	int len_servs = len(servs);
 	int get_args = 0;
 	int j = len_servs;
@@ -112,15 +112,15 @@ int main(int argc, char *argv[])
 			switch(argv[i][1]){
 				case 't': //time before screensaver
 					if(argv[i+1])timeout = atoi(argv[i+1])*1000;
-					else printUsage();
+					else {printUsage();exit(2);}
 					break;
 				case 'a': //time after timeout
 					if(argv[i+1])time_saver = atoi(argv[i+1]);
-					else printUsage();
+					else {printUsage();exit(3);}
 					break;
 				case 's': //time for blanker
 					if(argv[i+1])time_sleep = atoi(argv[i+1]); //time before screen off
-					else printUsage();
+					else {printUsage();exit(4);}
 					break;
 				case 'r': //screensaver
 					sprintf(saver, "%s", argv[i+1]);
@@ -189,17 +189,18 @@ int main(int argc, char *argv[])
 				case '-': //double dashes options
 					if(!strcmp(argv[i],"--help")){
 						printUsage();
+						exit(0);
 					}
 					break;
 				default: //Uknown option
 					pr("Uknown option: %s. Use only '%s', or the switch '--help', to get a list of options\n",argv[i],argv[0]);
-					exit(4);
+					exit(6);
 			}
 		}
 		else if(get_args == 1){ //get args for -w
-			if(strlen(argv[i])>=50){
+			if(strlen(argv[i])>52){
 				pr("Argument '%s' of the -w flag is too long\n",argv[i]);
-				exit(3);
+				exit(5);
 			}
 			strcpy(servs[j],argv[i]);
 			if(debug_high == 1)printf("%s\n",argv[i]);
@@ -207,11 +208,13 @@ int main(int argc, char *argv[])
 		}
 	}
 	if(debug_ultra_high == 1)print_array(len(servs),servs);
-
-	if(ckea(saver) || ckea(locker) || ckea(sleeper)){ //check if required parameters are valid
-		printUsage();
-	}
-
+	
+	//check if required parameters are valid
+	if(ckea(saver)){printUsage();exit(10);}
+	if(ckea(locker)){printUsage();exit(11);}
+	if(ckea(sleeper)){printUsage();exit(12);}
+	
+	//-v
 	if(print_opts == 1){
 		printf("Before [Screensaver] from now (-t): %d s\n",timeout/1000);
 		printf("Before [Locker] from [Screensaver] (-a): %d s\n",time_saver);
