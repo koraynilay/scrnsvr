@@ -310,11 +310,13 @@ int main(int argc, char *argv[])
 		//get current focused window
 		Window focused = 0; // Window {aka long unsigned int}
 		int revto;
-		XWindowAttributes attribs;
-		XGetInputFocus(my_display, &focused, &revto);
+		int ciao = XGetInputFocus(my_display, &focused, &revto);
+		printf("%d:%d:%ld\n",ciao,revto,focused);
+		return 0;
 		if(focused != 0){
+			/*XWindowAttributes attribs;
 			XGetWindowAttributes(my_display, focused, &attribs);
-			if(debug_high == 1)printf("Focused window geom: %dx%d\n",attribs.width,attribs.height);
+			if(debug_high == 1)printf("Focused window geom: %dx%d\n",attribs.width,attribs.height);*/
 			
 			//check if focused window is fullscreen
 			if(check_fullscreen == 1){
