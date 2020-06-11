@@ -311,8 +311,7 @@ int main(int argc, char *argv[])
 		Window focused = 0; // Window {aka long unsigned int}
 		int revto;
 		int ciao = XGetInputFocus(my_display, &focused, &revto);
-		printf("%d:%d:%ld\n",ciao,revto,focused);
-		return 0;
+		//printf("%d:%d:%ld\n",ciao,revto,focused);
 		if(focused != 0){
 			/*XWindowAttributes attribs;
 			XGetWindowAttributes(my_display, focused, &attribs);
