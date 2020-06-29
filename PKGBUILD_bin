@@ -1,6 +1,6 @@
 # Maintainer: koraynilay <koray.fra@gmail.com>
 pkgname=scrnsvr-bin
-pkgver=0.2
+pkgver=0.3
 pkgrel=6
 pkgdesc="Yet Another X Screensaver/locker. Precompiled version."
 arch=('x86_64')
