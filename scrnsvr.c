@@ -398,6 +398,7 @@ int main(int argc, char *argv[])
 		}
 
 		can_lock_pa=system(cmd_parun)/256; //audio playing?
+		sys=system(pgrep_lock)/256; //is the locker running?
 		if(debug == 1)printf("can_lock_pa = %d\n",can_lock_pa);
 		if(debug == 1)printf("can_lock_wm = %d\n",can_lock_wm);
 		if(debug == 1)printf("is_fullscreen = %d\n",is_fullscreen);
@@ -408,11 +409,10 @@ int main(int argc, char *argv[])
 		//   app is not fullscreen then lock
 
 		//if((can_lock_pa == 1 || can_lock_wm == 1) && !is_fullscreen){ //wasn't sure about the logic lol
-		if(!((can_lock_pa != 1 && can_lock_wm != 1) || (is_fullscreen || is_fullscreen_geom))){
+		if(!((can_lock_pa != 1 && can_lock_wm != 1) || (is_fullscreen || is_fullscreen_geom)) || sys != 1){
 			if(info->idle >= timeout && info->idle <= timeout+180){ //has timeout passed?
-				sys=system(pgrep_lock)/256; //is the locker running?
 				if(debug_high == 1)printf("sys = %d\n",sys);
-				if(sys == 1){ //if no then
+				if(sys == 1){ //if locker not running then
 					if(spid != 69420){pthread_cancel(sle);}
 					if(cpid != 69420){pthread_cancel(chi);}
 					if(vpid != 69420){pthread_cancel(svr);}
