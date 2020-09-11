@@ -1,10 +1,13 @@
-0	normal exit (or after --help)
-1	too few arguments
-2	invalid timeout (-t)
-3	invalid time after timeout (-a)
-4	invalid blanker time (-s)
-5	one of -w arguments is too long (max 52 chars)
-6	unknown option
-10	saver parameter is invalid
-11	locker parameter is invalid
-12	sleeper parameter is invalid
+0	EX_OK		normal exit (or after --help)
+64	EX_USAGE	too few arguments
+64	EX_USAGE	unknown option
+78	EX_CONFIG	unknown key in cofig file
+78	EX_CONFIG	missing value for a key in config gile
+65	EX_DATAERR	one of -w arguments is too long (max 52 chars)
+85	EX_DATAERR+20	invalid timeout (-t)
+86	EX_DATAERR+21	invalid time after timeout (-a)
+87	EX_DATAERR+22	invalid blanker time (-s)
+88	EX_DATAERR+23	invalid borders_pixel (-i)
+89	EX_DATAERR+24	saver parameter is invalid
+90	EX_DATAERR+25	locker parameter is invalid
+91	EX_DATAERR+26	sleeper parameter is invalid

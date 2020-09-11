@@ -1,0 +1,18 @@
+; comment
+# comment
+timeout = 20
+time saver = 15
+time sleep = 60
+saver = /usr/lib/xscreensaver/bsod -only dvd
+locker = lock.sh
+blanker = xset dpms force off
+notifs = 0
+notifier = dunstify ciao
+notifier 1 = dunstify still 1 sec
+notifier 2 = dunstify still 2 sec
+notifier 3 = dunstify still 3 sec
+notifier 4 = dunstify still 4 sec
+notifier 5 = dunstify still 5 sec
+check fullscreen = 1
+; comma-separated list (-w flag from the command line)
+services = reddit,twitch

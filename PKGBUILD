@@ -1,6 +1,6 @@
 # Maintainer: koraynilay <koray.fra@gmail.com>
 pkgname=scrnsvr
-pkgver=0.4
+pkgver=1
 pkgrel=8
 pkgdesc="Yet Another X Screensaver/locker"
 arch=('x86_64')
