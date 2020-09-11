@@ -1,0 +1,9 @@
+[Unit]
+Description=Yet another X Screensaver/Locker
+[Service]
+Type=simple
+ExecStart=/usr/bin/scrnsvr
+ProtectSystem=yes
+NoNewPrivileges=yes
+[Install]
+WantedBy=default.target
