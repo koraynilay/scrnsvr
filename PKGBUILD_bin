@@ -11,6 +11,7 @@ depends=('pulseaudio' 'grep' 'procps-ng' 'libxss')
 makedepends=('git' 'gcc')
 source=("$pkgname-$pkgver::git+https://github.com/koraynilay/scrnsvr")
 optdepends=('dunst: dunstify for notifications' 'libnotify: for notifications')
+install="scrnsvr.install"
 md5sums=("SKIP")
 
 package() {

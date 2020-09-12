@@ -11,6 +11,7 @@ makedepends=('git' 'gcc')
 conflicts=('scrnsvr-bin')
 source=("$pkgname-$pkgver::git+https://github.com/koraynilay/scrnsvr")
 optdepends=('dunst: dunstify for notifications' 'libnotify: for notifications')
+install="scrnsvr.install"
 md5sums=("SKIP")
 
 build() {
