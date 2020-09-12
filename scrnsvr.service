@@ -2,7 +2,7 @@
 Description=Yet another X Screensaver/Locker
 [Service]
 Type=simple
-ExecStart=/usr/bin/scrnsvr
+ExecStart=/usr/bin/scrnsvr > /dev/null
 ProtectSystem=yes
 NoNewPrivileges=yes
 [Install]
