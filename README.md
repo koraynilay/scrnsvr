@@ -4,9 +4,9 @@ Yet another X Screensaver/Locker
 
 ## Install
 
-Arch Linux: [AUR](https://aur.archlinux.org/scrnsvr.git) 
+Arch Linux: [AUR](https://aur.archlinux.org/packages/scrnsvr) 
 
-Arch Linux (Precompiled version): [AUR](https://aur.archlinux.org/scrnsvr-bin.git)
+Arch Linux (Precompiled version): [AUR](https://aur.archlinux.org/packages/scrnsvr-bin)
 
 To build this yourself:
 
