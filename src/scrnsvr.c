@@ -1,10 +1,10 @@
 /*
  * compile with:
- * gcc [options] scrnsvr.c -o scrnsvr -lXss -lX11 -lpthread
+ * gcc [options] scrnsvr.c -o scrnsvr -lpthread -lXss -lX11 -lXinerama -lXrandr
  *
  * OR for full RELRO (more info: https://www.redhat.com/en/blog/hardening-elf-binaries-using-relocation-read-only-relro)
  *
- * gcc -g -O0 -Wl,-z,relro,-z,now [options] scrnsvr.c -o scrnsvr -lXss -lX11 -lpthread
+ * gcc -Wl,-z,relro,-z,now [options] scrnsvr.c -o scrnsvr -lpthread -lXss -lX11 -lXinerama -lXrandr
 */
 #define _GNU_SOURCE
 #include <stdio.h>
