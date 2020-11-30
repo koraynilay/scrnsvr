@@ -485,10 +485,10 @@ int main(int argc, char *argv[])
 					if(debug_high == 1)printf("Focused window geom: %dx%d\n",focused_width,focused_height);
 					if(debug_ultra_mega_high == 1)printf("%d ",display_height == focused_height);
 					if(debug_ultra_mega_high == 1)printf("%d\n",display_width == focused_width);
-					if(display_height == focused_height || display_height == (focused_height - borders_pixel)){
-						if(display_width == focused_width || display_width == (focused_width - borders_pixel)){
+
+					if((display_height == focused_height || display_height == (focused_height - borders_pixel)) &&
+					   (display_width  == focused_width  || display_width  == (focused_width  - borders_pixel))){
 							is_fullscreen_geom = 1;
-						}else is_fullscreen_geom = 0;
 					}
 					else if(XineramaIsActive(my_display) == 1){
 						XineramaScreenInfo *xinfo = XineramaQueryScreens(my_display, &nsizes);
@@ -496,11 +496,10 @@ int main(int argc, char *argv[])
 							if(debug_high == 1) printf("Xinerama Screen %d Geometry:%dx%d\n",xinfo[i].screen_number,xinfo[i].width,xinfo[i].height);
 							display_height = xinfo[i].height;
 							display_width = xinfo[i].width;
-							if(display_height == focused_height || display_height == (focused_height - borders_pixel)){
-								if(display_width == focused_width || display_width == (focused_width - borders_pixel)){
+							if((display_height == focused_height || display_height == (focused_height - borders_pixel)) &&
+							   (display_width  == focused_width  || display_width  == (focused_width  - borders_pixel))){
 									is_fullscreen_geom = 1;
 									break;
-								}else is_fullscreen_geom = 0;
 							}else is_fullscreen_geom = 0;
 						}
 						XFree(xinfo);
@@ -511,16 +510,15 @@ int main(int argc, char *argv[])
 							if(debug_high == 1) printf("Xrandr Screen %d Geometry:%dx%d\n",i,xinfo[i].width,xinfo[i].height);
 							display_height = xinfo[i].height;
 							display_width = xinfo[i].width;
-							if(display_height == focused_height || display_height == (focused_height - borders_pixel)){
-								if(display_width == focused_width || display_width == (focused_width - borders_pixel)){
+							if((display_height == focused_height || display_height == (focused_height - borders_pixel)) &&
+							   (display_width  == focused_width  || display_width  == (focused_width  - borders_pixel))){
 									is_fullscreen_geom = 1;
 									break;
-								}else is_fullscreen_geom = 0;
 							}else is_fullscreen_geom = 0;
 						}
 						XFree(xinfo);
 					}
-					//else is_fullscreen_geom = 0;
+					else is_fullscreen_geom = 0;
 				}
 				
 				Atom prop_state = XInternAtom(my_display, "_NET_WM_STATE",False);
