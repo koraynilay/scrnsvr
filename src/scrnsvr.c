@@ -480,6 +480,8 @@ int main(int argc, char *argv[])
 					int focused_height = attribs.height;
 					int focused_width = attribs.width;
 					int nsizes = 0;
+					int event_base_return;
+					int error_base_return;
 					if(debug_high == 1)printf("Focused window geom: %dx%d\n",focused_width,focused_height);
 					if(debug_ultra_mega_high == 1)printf("%d ",display_height == focused_height);
 					if(debug_ultra_mega_high == 1)printf("%d\n",display_width == focused_width);
@@ -503,7 +505,7 @@ int main(int argc, char *argv[])
 						}
 						XFree(xinfo);
 					}
-					else{
+					else if(XRRQueryExtension(my_display, &event_base_return, &error_base_return) == 1){
 						XRRMonitorInfo *xinfo = XRRGetMonitors(my_display, RootWindow(my_display, DefaultScreen(my_display)), True, &nsizes);
 						for(int i=0;i<nsizes;i++){
 							if(debug_high == 1) printf("Xrandr Screen %d Geometry:%dx%d\n",i,xinfo[i].width,xinfo[i].height);
