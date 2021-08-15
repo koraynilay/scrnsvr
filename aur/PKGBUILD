@@ -1,12 +1,12 @@
 # Maintainer: koraynilay <koray.fra@gmail.com>
 pkgname=scrnsvr
-pkgver=1
-pkgrel=15
+pkgver=1.16
+pkgrel=16
 pkgdesc="Yet Another X Screensaver/locker"
 arch=('x86_64')
 url="https://github.com/koraynilay/scrnsvr"
 license=('WTFPL')
-depends=('pulseaudio' 'grep' 'procps-ng' 'libxss')
+depends=('pulseaudio' 'grep' 'procps-ng' 'libxss' 'pcre')
 makedepends=('git' 'gcc')
 conflicts=('scrnsvr-bin')
 source=("$pkgname-$pkgver::git+https://github.com/koraynilay/scrnsvr")
@@ -16,7 +16,7 @@ md5sums=("SKIP")
 
 build() {
 	cd "$srcdir/$pkgname-$pkgver"
-	gcc -O3 -Wl,-z,relro,-z,now src/scrnsvr.c -o bin/scrnsvr -lpthread -lXss -lX11 -lXinerama -lXrandr
+	gcc -O3 -Wl,-z,relro,-z,now src/scrnsvr.c -o bin/scrnsvr -lpthread -lXss -lX11 -lXinerama -lXrandr -lpcre
 }
 
 package() {
