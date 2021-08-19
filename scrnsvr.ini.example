@@ -1,18 +1,34 @@
 ; comment
 # comment
+; for more info run `scrnsvr --help`
 timeout = 20
 time saver = 15
 time sleep = 60
+
 saver = /usr/lib/xscreensaver/bsod -only dvd
 locker = lock.sh
 blanker = xset dpms force off
+
+; use shell to run respective programs
+shell saver = true
+shell locker = false
+shell blanker = true
+; this includes all three above
+shell = false
+
+; enable (1) or disable (0) notifications before saver activation
 notifs = 0
+; command to run each of the 5 seconds before saver
 notifier = dunstify ciao
+; commands to run at 1, 2, 3, 4 and 5 seconds before saver
 notifier 1 = dunstify still 1 sec
 notifier 2 = dunstify still 2 sec
 notifier 3 = dunstify still 3 sec
 notifier 4 = dunstify still 4 sec
 notifier 5 = dunstify still 5 sec
+
+; enable (1) or disable (0) current focused window fullscreen check
 check fullscreen = 1
+
 ; comma-separated list (-w flag from the command line)
 services = reddit,twitch
