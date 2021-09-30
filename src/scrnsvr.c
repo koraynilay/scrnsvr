@@ -41,9 +41,35 @@ gcc -Wl,-z,relro,-z,now [options] scrnsvr.c -o scrnsvr -lpthread -lXss -lX11 -lX
 #define COMMENT_HASH '#'
 #define PID_PTHREAD_DEF_VALUE 69420
 
+struct svr_struct { //struct for thread locker arguments
+	char *cmd;
+	int shell;
+};
+struct lck_struct { //struct for thread locker arguments
+	//int vpid;
+	int time_saver;
+	char *cmd;
+	//pthread_t svr;
+	bool locked;
+	int shell;
+};
+struct slf_struct { //struct for thread sleeper arguments
+	int time_sleep;
+	char *cmd;
+	int shell;
+};
+void *p;
+
 void *svf(void *ptr); //function for saver pthread
 void *lck(void *ptr); //function for locker pthread
+void *start_lck(); //function to run the lock
 void *slf(void *ptr); //function for sleeper pthread
+void lock_now(int sig){ //function called when SIGUSR1 received
+	pthread_t ll;
+	if(sig == SIGUSR1){
+		pthread_create(&ll,NULL,start_lck,NULL); //create thread otherwise the whole process waits for the locker to finish
+	}
+} //function invoked when using the "lock" argument (to lock now)
 char *strtrm(char *str); //trim spaces at start and end of strings
 bool can_run_command(const char *cmd); //check if command is executable (and exists) in the system
 int xerrh(Display *d,XErrorEvent *e); //handle X11 errors
@@ -57,7 +83,6 @@ int pthread_cancel_pid(pthread_t thread, int *pid, int check_value, int debug){
 	}
 	return 1;
 }
-
 void printUsage(){ 
 		//pr("Usage: scrnsvr -[tearlswhnkcc1c2c3c4c5xdDuU]\n\n"); //not yet supported
 		pr("Usage: scrnsvr [OPTIONS]\n\n");
@@ -91,28 +116,24 @@ void printUsage(){
 		pr(" -d\t\t Shows debug info (Use -D,-u or -U for more information)\n");
 }
 
-struct svr_struct { //struct for thread locker arguments
-	char *cmd;
-	int shell;
-};
-struct lck_struct { //struct for thread locker arguments
-	int vpid;
-	int time_saver;
-	char *cmd;
-	pthread_t svr;
-	bool locked;
-	int shell;
-};
-struct slf_struct { //struct for thread sleeper arguments
-	int time_sleep;
-	char *cmd;
-	int shell;
-};
-
 int main(int argc, char *argv[]) {
 	if(getuid() == 0){ //check if root
 		pr("\nYou should NOT run this program as root. Press Control-C to cancel (10 seconds timeout, then continue running as normal)\n\n");
 		sleep(10);
+	}
+	if(argv[1][0] == 'l'){
+		pid_t ppid; //parent pid (p=parent;pid)
+		FILE *fpid=fopen("/tmp/scrnsvr.pid","r");
+		if(!fpid){
+			pr("Cannot find /tmp/scrnsvr.pid. Are you sure it exists?\n");
+			exit(EX_NOINPUT);
+		}
+		fscanf(fpid,"%d",&ppid);
+		fclose(fpid);
+		if(!kill(ppid, SIGUSR1)) printf("sent SIGUSR1 to scrnsvr (%d)\n",ppid);
+		/*TODO: use errno*/
+		else printf("sent SIGUSR1 to scrnsvr (%d)\n",ppid);
+		exit(EX_OK);
 	}
 	// string config options
 	char saver[60] = "";
@@ -494,8 +515,8 @@ int main(int argc, char *argv[]) {
 	args_svr.cmd = cmd_saver;
 	args_svr.shell = shell_saver;
 
-	args_lck.vpid = vpid;
-	args_lck.svr = svr;
+	//args_lck.vpid = vpid;
+	//args_lck.svr = svr;
 	args_lck.time_saver = time_saver;
 	args_lck.cmd = cmd_lock;
 	args_lck.locked = false;
@@ -504,6 +525,7 @@ int main(int argc, char *argv[]) {
 	args_slf.time_sleep = time_sleep;
 	args_slf.cmd = cmd_sleep;
 	args_slf.shell = shell_sleeper;
+	p = &args_lck;
 	
 	//char cmd_parun[] = "python -c 'import dbus; bus = dbus.SessionBus(); [exit(1 if dbus.SessionBus().get_object(service, \"/org/mpris/MediaPlayer2\").Get(\"org.mpris.MediaPlayer2.Player\", \"PlaybackStatus\", dbus_interface=\"org.freedesktop.DBus.Properties\") == \"Playing\" else 0) for service in bus.list_names() if service.startswith(\"org.mpris.MediaPlayer2.\")]'"; //if I put it at the start, it could get overwritten by servs[] (idk why, but ok)
 	//if(debug_high == 1)printf("%s\n",cmd_parun);
@@ -514,6 +536,17 @@ int main(int argc, char *argv[]) {
 	XSetErrorHandler(xerrh);
 	struct timespec start, end;
 	long int delta_time = 0;
+	signal(SIGUSR1, lock_now);
+
+	pid_t pid = getpid();
+	FILE *fpid=fopen("/tmp/scrnsvr.pid","w");
+	if(!fpid){
+		//TODO: add ignore switch if this happens
+		pr("Cannot create /tmp/scrnsvr.pid\n");
+		exit(EX_IOERR);
+	}
+	fprintf(fpid,"%d",pid);
+	fclose(fpid);
 	// Main Loop
 	while(my_display){
 		usleep(useconds - ((delta_time <= useconds) ? delta_time : useconds)); //pause for useconds micro-seconds
@@ -670,6 +703,7 @@ int main(int argc, char *argv[]) {
 		if(debug == 1)printf("can_lock_wm = %d\n",can_lock_wm);
 		if(debug == 1)printf("is_fullscreen = %d\n",is_fullscreen);
 		if(debug == 1)printf("is_fullscreen_geom = %d\n",is_fullscreen_geom);
+		if(debug == 1)printf("args_lck.locked = %d\n",args_lck.locked);
 		//lock if:
 		//- player not detected (can_lock_pa == 1)
 		//- focused tab hasn't servs
@@ -805,14 +839,17 @@ void *lck(void *ptr){ //function for locker thread
 	
 	struct lck_struct *args_struct = ptr;
 	sleep(args_struct->time_saver);
-
+	if(args_struct->locked == false) (*start_lck)();
+	//pthread_cancel_pid(args->svr, &(args->vpid), PID_PTHREAD_DEF_VALUE, 0);
+	return NULL;
+}
+void *start_lck(){
+	struct lck_struct *args_struct = p;
 	printf("locked\n");
 	args_struct->locked = true;
 	system_or_execlp(args_struct);
-
 	args_struct->locked = false;
 	printf("not locked anymore\n");
-	//pthread_cancel_pid(args->svr, &(args->vpid), PID_PTHREAD_DEF_VALUE, 0);
 	return NULL;
 }
 void *slf(void *ptr){ //function for sleeper thread

@@ -11,3 +11,5 @@
 89	EX_DATAERR+24	saver parameter is invalid
 90	EX_DATAERR+25	locker parameter is invalid
 91	EX_DATAERR+26	sleeper parameter is invalid
+66	EX_NOINPUT	/tmp/scrnsvr.pid not found
+74	EX_IOERR	could not create /tmp/scrnsvr.pid
