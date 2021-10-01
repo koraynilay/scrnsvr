@@ -40,6 +40,7 @@ gcc -Wl,-z,relro,-z,now [options] scrnsvr.c -o scrnsvr -lpthread -lXss -lX11 -lX
 #define COMMENT_COLON ';'
 #define COMMENT_HASH '#'
 #define PID_PTHREAD_DEF_VALUE 69420
+#define PID_FILE "/tmp/scrnsvr.pid" //file where the pid of the main process is stored
 
 struct svr_struct { //struct for thread locker arguments
 	char *cmd;
@@ -64,12 +65,6 @@ void *svf(void *ptr); //function for saver pthread
 void *lck(void *ptr); //function for locker pthread
 void *start_lck(); //function to run the lock
 void *slf(void *ptr); //function for sleeper pthread
-void lock_now(int sig){ //function called when SIGUSR1 received
-	pthread_t ll;
-	if(sig == SIGUSR1){
-		pthread_create(&ll,NULL,start_lck,NULL); //create thread otherwise the whole process waits for the locker to finish
-	}
-} //function invoked when using the "lock" argument (to lock now)
 char *strtrm(char *str); //trim spaces at start and end of strings
 bool can_run_command(const char *cmd); //check if command is executable (and exists) in the system
 int xerrh(Display *d,XErrorEvent *e); //handle X11 errors
@@ -83,13 +78,26 @@ int pthread_cancel_pid(pthread_t thread, int *pid, int check_value, int debug){
 	}
 	return 1;
 }
+//signal functions
+void lock_now(int sig){ //function called when SIGUSR1 received
+	pthread_t ll;
+	if(sig == SIGUSR1){
+		pthread_create(&ll,NULL,start_lck,NULL); //create thread otherwise the whole process waits for the locker to finish
+	}
+} //function invoked when using the "lock" argument (to lock now)
+void exit_from_signal(int sig){
+	if(remove(PID_FILE)) printf("Could not find or delete %s. Please delete it manually if it still exists.\n",PID_FILE);
+	else printf("Deleted %s. Exiting...\n",PID_FILE);
+	exit(EX_OK);
+}
+//help usage function
 void printUsage(){ 
 		//pr("Usage: scrnsvr -[tearlswhnkcc1c2c3c4c5xdDuU]\n\n"); //not yet supported
 		pr("Usage: scrnsvr [OPTIONS]\n\n");
 		pr(" --help\t\tShow this help\n\n");
 
-		pr(" --config [file] Specify custom config file (absolute path, default: $HOME/.config/scrnsvr.ini)\n");
-		pr(" --copy-config\t Copy a demo config to $HOME/.config/scrnsvr.ini\n");
+		pr(" --config [file] Specify custom config file (absolute path, default: $%s/.config/scrnsvr.ini)\n",HOME);
+		pr(" --copy-config\t Copy a demo config to $%s/.config/scrnsvr.ini\n",HOME);
 		pr(" --shell-saver\t Invokes the shell to run [saver] (use if it needs argument(s))\n");
 		pr(" --shell-locker\t Invokes the shell to run [locker] (use if it needs argument(s))\n");
 		pr(" --shell-blanker Invokes the shell to run [blanker] (use if it needs argument(s))\n");
@@ -121,20 +129,21 @@ int main(int argc, char *argv[]) {
 		pr("\nYou should NOT run this program as root. Press Control-C to cancel (10 seconds timeout, then continue running as normal)\n\n");
 		sleep(10);
 	}
-	if(argv[1][0] == 'l'){
-		pid_t ppid; //parent pid (p=parent;pid)
-		FILE *fpid=fopen("/tmp/scrnsvr.pid","r");
-		if(!fpid){
-			pr("Cannot find /tmp/scrnsvr.pid. Are you sure it exists?\n");
-			exit(EX_NOINPUT);
+	if(argv[1])
+		if(argv[1][0] == 'l'){
+			pid_t ppid; //parent pid (p=parent;pid)
+			FILE *fpid=fopen(PID_FILE,"r");
+			if(!fpid){
+				pr("Cannot find %s. Are you sure it exists?\n",PID_FILE);
+				exit(EX_NOINPUT);
+			}
+			fscanf(fpid,"%d",&ppid);
+			fclose(fpid);
+			if(!kill(ppid, SIGUSR1)) printf("sent SIGUSR1 to scrnsvr (%d)\n",ppid);
+			/*TODO: use errno*/
+			else printf("sent SIGUSR1 to scrnsvr (%d)\n",ppid);
+			exit(EX_OK);
 		}
-		fscanf(fpid,"%d",&ppid);
-		fclose(fpid);
-		if(!kill(ppid, SIGUSR1)) printf("sent SIGUSR1 to scrnsvr (%d)\n",ppid);
-		/*TODO: use errno*/
-		else printf("sent SIGUSR1 to scrnsvr (%d)\n",ppid);
-		exit(EX_OK);
-	}
 	// string config options
 	char saver[60] = "";
 	char locker[60] = "";
@@ -291,6 +300,7 @@ int main(int argc, char *argv[]) {
 					}
 					else if(!strcmp(argv[i],"--copy-config")){
 						system("cp -vi /usr/share/scrnsvr/scrnsvr.ini.example $HOME/.config/scrnsvr.ini");
+						//TODO: system("cp -vi /usr/share/scrnsvr/scrnsvr.ini.example $%s/.config/scrnsvr.ini",HOME);
 						exit(EX_OK);
 					}else if(!strcmp(argv[i],"--shell-saver")){ //use shell to run screensaver
 						shell_saver = 1;
@@ -537,12 +547,14 @@ int main(int argc, char *argv[]) {
 	struct timespec start, end;
 	long int delta_time = 0;
 	signal(SIGUSR1, lock_now);
+	signal(SIGTERM, exit_from_signal);
+	signal(SIGINT, exit_from_signal);
 
 	pid_t pid = getpid();
-	FILE *fpid=fopen("/tmp/scrnsvr.pid","w");
+	FILE *fpid=fopen(PID_FILE,"w");
 	if(!fpid){
 		//TODO: add ignore switch if this happens
-		pr("Cannot create /tmp/scrnsvr.pid\n");
+		pr("Could not create %s\n",PID_FILE);
 		exit(EX_IOERR);
 	}
 	fprintf(fpid,"%d",pid);
