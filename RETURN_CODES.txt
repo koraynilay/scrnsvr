@@ -13,3 +13,4 @@
 91	EX_DATAERR+26	sleeper parameter is invalid
 66	EX_NOINPUT	/tmp/scrnsvr.pid not found
 74	EX_IOERR	could not create /tmp/scrnsvr.pid
+94	EX_IOERR+20	/tmp/scrnsvr.pid already exists

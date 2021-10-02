@@ -129,10 +129,12 @@ int main(int argc, char *argv[]) {
 		pr("\nYou should NOT run this program as root. Press Control-C to cancel (10 seconds timeout, then continue running as normal)\n\n");
 		sleep(10);
 	}
-	if(argv[1])
-		if(argv[1][0] == 'l'){
+
+	FILE *fpid;
+	if(argv[1]) //if there is an argument
+		if(argv[1][0] == 'l'){ //if the user called 'lock' send SIGUSR1 to the already running scrnsvr process
 			pid_t ppid; //parent pid (p=parent;pid)
-			FILE *fpid=fopen(PID_FILE,"r");
+			fpid=fopen(PID_FILE,"r");
 			if(!fpid){
 				pr("Cannot find %s. Are you sure it exists?\n",PID_FILE);
 				exit(EX_NOINPUT);
@@ -144,6 +146,11 @@ int main(int argc, char *argv[]) {
 			else printf("sent SIGUSR1 to scrnsvr (%d)\n",ppid);
 			exit(EX_OK);
 		}
+	if(!access(PID_FILE,F_OK)){ //check if PID_FILE already exists, if yes exit, otherwise PID_FILE will be overwritten by the new process
+		pr("%s already exists, stop the already running scrnsvr process before starting a new one.\n",PID_FILE);
+		exit(EX_IOERR+20);
+	}
+
 	// string config options
 	char saver[60] = "";
 	char locker[60] = "";
@@ -551,7 +558,7 @@ int main(int argc, char *argv[]) {
 	signal(SIGINT, exit_from_signal);
 
 	pid_t pid = getpid();
-	FILE *fpid=fopen(PID_FILE,"w");
+	fpid=fopen(PID_FILE,"w");
 	if(!fpid){
 		//TODO: add ignore switch if this happens
 		pr("Could not create %s\n",PID_FILE);
